@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TexnoFazo — Elektronika, quvvat bilan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1420;
+    --surface:#121F33;
+    --surface-2:#1A2B45;
+    --surface-3:#22375A;
+    --accent-orange:#FF6B35;
+    --accent-orange-dim:#B8501F;
+    --accent-teal:#00D9C0;
+    --paper:#F4F6F8;
+    --paper-2:#E9ECF1;
+    --text-hi:#F5F7FA;
+    --text-mid:#A8B3C7;
+    --text-low:#66738C;
+    --text-ink:#101825;
+    --line:rgba(255,255,255,0.09);
+    --line-dark:rgba(11,20,32,0.1);
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--text-hi);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{display:block;}
+  a{color:inherit; text-decoration:none;}
+  ul{list-style:none;}
+  button{font-family:inherit; cursor:pointer;}
+  .wrap{max-width:1240px; margin:0 auto; padding:0 32px;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .led{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--accent-teal);
+    box-shadow:0 0 6px 1px rgba(0,217,192,0.7);
+    display:inline-block;
+    animation: pulse 2.2s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  .led.orange{ background:var(--accent-orange); box-shadow:0 0 6px 1px rgba(255,107,53,0.7); }
+  @keyframes pulse{
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.45; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .led{ animation:none; }
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+
+  .power-veil{
+    position:fixed; inset:0; background:var(--ink); z-index:999;
+    display:flex; align-items:center; justify-content:center;
+    animation: veil-out 1.1s ease forwards 0.35s;
+    pointer-events:none;
+  }
+  .power-veil::before{
+    content:''; width:100%; height:2px; background:var(--accent-teal);
+    box-shadow:0 0 20px 4px rgba(0,217,192,0.8);
+    animation: line-grow 0.5s ease forwards;
+  }
+  @keyframes line-grow{
+    0%{ transform:scaleX(0); }
+    100%{ transform:scaleX(1); }
+  }
+  @keyframes veil-out{
+    0%{ opacity:1; }
+    60%{ opacity:1; }
+    100%{ opacity:0; visibility:hidden; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .power-veil{ display:none; }
+  }
+
+  header{
+    position:sticky; top:0; z-index:100;
+    background:rgba(11,20,32,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    height:76px; gap:24px;
+  }
+  .logo{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.3rem;
+    display:flex; align-items:center; gap:9px; letter-spacing:-0.01em;
+  }
+  .logo .led{ margin-bottom:1px; }
+  .logo b{ color:var(--accent-orange); }
+  nav.primary{ display:flex; gap:2px; }
+  nav.primary a{
+    padding:9px 14px; border-radius:8px; font-size:0.92rem; color:var(--text-mid);
+    font-weight:500; transition:color .15s, background .15s;
+  }
+  nav.primary a:hover{ color:var(--text-hi); background:var(--surface); }
+  .nav-actions{ display:flex; align-items:center; gap:14px; }
+  .icon-btn{
+    width:38px; height:38px; border-radius:9px; background:var(--surface);
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+    color:var(--text-mid); transition:border-color .15s, color .15s;
+  }
+  .icon-btn:hover{ border-color:var(--accent-teal); color:var(--accent-teal); }
+  .call-chip{
+    display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-mid);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .call-chip span.num{ color:var(--text-hi); font-weight:600; }
+
+  .hero{
+    padding:88px 0 96px;
+    background:
+      radial-gradient(ellipse 900px 500px at 82% -10%, rgba(0,217,192,0.14), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 10% 110%, rgba(255,107,53,0.10), transparent 60%);
+    position:relative; overflow:hidden;
+  }
+  .hero::before{
+    content:'';
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+  }
+  .hero-grid{
+    display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center;
+    position:relative; z-index:1;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:9px;
+    font-family:'IBM Plex Mono',monospace; font-size:0.76rem; letter-spacing:0.09em;
+    color:var(--accent-teal); text-transform:uppercase; margin-bottom:22px;
+    border:1px solid rgba(0,217,192,0.3); padding:7px 13px; border-radius:100px;
+    background:rgba(0,217,192,0.06);
+  }
+  .hero h1{
+    font-size:clamp(2.5rem, 4.6vw, 3.9rem); line-height:1.03; margin-bottom:22px;
+  }
+  .hero h1 em{ font-style:normal; color:var(--accent-orange); }
+  .hero p.lede{
+    font-size:1.08rem; color:var(--text-mid); max-width:490px; margin-bottom:34px;
+  }
+  .hero-ctas{ display:flex; gap:14px; margin-bottom:44px; flex-wrap:wrap; }
+  .btn{
+    padding:14px 26px; border-radius:10px; font-weight:600; font-size:0.95rem;
+    display:inline-flex; align-items:center; gap:9px; transition:transform .15s, box-shadow .15s, background .15s;
+    border:1px solid transparent;
+  }
+  .btn-primary{ background:var(--accent-orange); color:#1A0A02; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 26px -8px rgba(255,107,53,0.55); }
+  .btn-ghost{ background:transparent; border-color:var(--line); color:var(--text-hi); }
+  .btn-ghost:hover{ border-color:var(--accent-teal); color:var(--accent-teal); }
+  .hero-stats{ display:flex; gap:34px; flex-wrap:wrap; }
+  .hero-stats div{ display:flex; flex-direction:column; gap:3px; }
+  .hero-stats .num{ font-family:'IBM Plex Mono',monospace; font-size:1.3rem; font-weight:600; color:var(--text-hi); }
+  .hero-stats .lbl{ font-size:0.78rem; color:var(--text-low); }
+
+  .panel{
+    background:linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid var(--line); border-radius:18px; padding:26px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.6);
+  }
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .panel-head .title{ font-family:'IBM Plex Mono',monospace; font-size:0.78rem; color:var(--text-low); letter-spacing:0.06em; text-transform:uppercase; }
+  .panel-head .dots{ display:flex; gap:6px; }
+  .panel-head .dots span{ width:8px; height:8px; border-radius:50%; background:var(--surface-3); }
+  .panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .panel-tile{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px;
+    display:flex; flex-direction:column; gap:10px; transition:border-color .2s, transform .2s;
+  }
+  .panel-tile:hover{ border-color:var(--accent-teal); transform:translateY(-3px); }
+  .panel-tile .top-row{ display:flex; align-items:center; justify-content:space-between; }
+  .panel-tile svg{ width:26px; height:26px; color:var(--accent-teal); }
+  .panel-tile .name{ font-size:0.86rem; font-weight:600; color:var(--text-hi); }
+  .panel-tile .stat{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--text-low); }
+
+  section{ padding:88px 0; }
+  .section-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:44px; gap:20px; flex-wrap:wrap; }
+  .section-head .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:0.76rem; color:var(--accent-orange);
+    text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; display:block;
+  }
+  .section-head h2{ font-size:clamp(1.7rem,2.6vw,2.3rem); }
+  .section-head p{ color:var(--text-mid); max-width:420px; }
+  .see-all{ color:var(--accent-teal); font-size:0.9rem; font-weight:600; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+
+  .cat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .cat-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px; position:relative; overflow:hidden; transition:transform .2s, border-color .2s;
+  }
+  .cat-card:hover{ transform:translateY(-4px); border-color:var(--accent-teal); }
+  .cat-card svg{ width:34px; height:34px; color:var(--accent-teal); margin-bottom:22px; }
+  .cat-card h3{ font-size:1.08rem; margin-bottom:7px; }
+  .cat-card p{ color:var(--text-mid); font-size:0.86rem; margin-bottom:18px; }
+  .cat-card .cat-count{
+    font-family:'IBM Plex Mono',monospace; font-size:0.74rem; color:var(--text-low);
+    display:flex; align-items:center; gap:7px;
+  }
+  .cat-card::after{
+    content:''; position:absolute; top:-40px; right:-40px; width:120px; height:120px;
+    background:radial-gradient(circle, rgba(0,217,192,0.12), transparent 70%);
+    opacity:0; transition:opacity .25s;
+  }
+  .cat-card:hover::after{ opacity:1; }
+
+  .products-section{ background:var(--paper); color:var(--text-ink); }
+  .products-section .section-head .tag{ color:var(--accent-orange-dim); }
+  .products-section .section-head p{ color:#5A6478; }
+  .prod-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  .prod-card{
+    background:#fff; border:1px solid var(--line-dark); border-radius:var(--radius);
+    overflow:hidden; transition:box-shadow .2s, transform .2s;
+  }
+  .prod-card:hover{ box-shadow:0 20px 40px -20px rgba(16,24,37,0.25); transform:translateY(-3px); }
+  .prod-media{
+    height:150px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(145deg,#EEF1F5,#E3E8EF); position:relative;
+  }
+  .prod-media svg{ width:56px; height:56px; color:#7C879C; }
+  .prod-badge{
+    position:absolute; top:12px; left:12px; background:var(--accent-orange); color:#1A0A02;
+    font-family:'IBM Plex Mono',monospace; font-size:0.68rem; font-weight:600;
+    padding:4px 9px; border-radius:100px;
+  }
+  .prod-body{ padding:18px 18px 20px; }
+  .prod-cat{ font-size:0.72rem; color:#8A93A6; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; font-family:'IBM Plex Mono',monospace;}
+  .prod-name{ font-weight:600; font-size:0.98rem; margin-bottom:10px; color:var(--text-ink); }
+  .prod-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; }
+  .prod-price{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:1.02rem; color:var(--text-ink); }
+  .prod-price span{ font-size:0.68rem; color:#8A93A6; font-weight:500; display:block; margin-top:2px;}
+  .prod-stock{ display:flex; align-items:center; gap:6px; font-size:0.74rem; color:#4C5568; }
+  .add-btn{
+    width:36px; height:36px; border-radius:9px; background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center; transition:background .15s;
+    border:none;
+  }
+  .add-btn:hover{ background:var(--accent-orange); }
+
+  .trust{ background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .trust-grid{ display:grid; grid-template-columns:repeat(4,1fr); }
+  .trust-item{
+    padding:34px 30px; display:flex; align-items:flex-start; gap:14px;
+    border-right:1px solid var(--line);
+  }
+  .trust-item:last-child{ border-right:none; }
+  .trust-item svg{ width:24px; height:24px; color:var(--accent-orange); flex-shrink:0; margin-top:2px; }
+  .trust-item h4{ font-size:0.92rem; margin-bottom:4px; font-family:'Space Grotesk',sans-serif; font-weight:600; }
+  .trust-item p{ font-size:0.8rem; color:var(--text-low); }
+
+  .promo{
+    background:linear-gradient(115deg, #1A0A02 0%, var(--accent-orange-dim) 46%, var(--accent-orange) 100%);
+    border-radius:20px; padding:52px 56px; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:space-between; gap:30px; flex-wrap:wrap;
+  }
+  .promo::before{
+    content:''; position:absolute; inset:0;
+    background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 26px);
+  }
+  .promo-text{ position:relative; z-index:1; max-width:520px; }
+  .promo-text .tag{ font-family:'IBM Plex Mono',monospace; font-size:0.76rem; letter-spacing:0.08em; text-transform:uppercase; opacity:0.85; margin-bottom:12px; display:block;}
+  .promo-text h2{ font-size:clamp(1.8rem,3vw,2.5rem); margin-bottom:12px; line-height:1.1; }
+  .promo-text p{ opacity:0.92; font-size:0.98rem; max-width:420px; }
+  .promo-cta{ position:relative; z-index:1; }
+  .promo-cta .btn-primary{ background:var(--ink); color:#fff; }
+  .promo-cta .btn-primary:hover{ box-shadow:0 10px 26px -8px rgba(0,0,0,0.5); }
+
+  footer{ padding:72px 0 32px; }
+  .foot-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:40px; padding-bottom:48px; border-bottom:1px solid var(--line); }
+  .foot-brand .logo{ margin-bottom:14px; }
+  .foot-brand p{ color:var(--text-mid); font-size:0.88rem; max-width:280px; margin-bottom:18px; }
+  .foot-socials{ display:flex; gap:10px; }
+  .foot-col h5{ font-size:0.78rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-low); margin-bottom:16px; font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .foot-col a, .foot-col p{ display:block; color:var(--text-mid); font-size:0.88rem; margin-bottom:11px; transition:color .15s; }
+  .foot-col a:hover{ color:var(--accent-teal); }
+  .newsletter{ display:flex; gap:8px; margin-top:6px; }
+  .newsletter input{
+    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:9px;
+    padding:11px 13px; color:var(--text-hi); font-size:0.85rem; font-family:'Inter',sans-serif;
+  }
+  .newsletter input:focus{ outline:2px solid var(--accent-teal); outline-offset:1px; border-color:transparent; }
+  .newsletter button{
+    background:var(--accent-teal); color:#052722; border:none; border-radius:9px; padding:0 16px;
+    font-weight:600; font-size:0.85rem;
+  }
+  .foot-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top:26px; flex-wrap:wrap; gap:12px; }
+  .foot-bottom p{ color:var(--text-low); font-size:0.8rem; }
+  .foot-bottom .legal{ display:flex; gap:20px; }
+  .foot-bottom .legal a{ color:var(--text-low); font-size:0.8rem; }
+  .foot-bottom .legal a:hover{ color:var(--text-hi); }
+
+  a:focus-visible, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent-teal); outline-offset:2px;
+  }
+
+  @media (max-width:980px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .panel{ max-width:480px; }
+    .cat-grid{ grid-template-columns:repeat(2,1fr); }
+    .prod-grid{ grid-template-columns:repeat(2,1fr); }
+    .trust-grid{ grid-template-columns:repeat(2,1fr); }
+    .trust-item{ border-right:1px solid var(--line); }
+    .trust-item:nth-child(2n){ border-right:none; }
+    .foot-grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:640px){
+    .wrap{ padding:0 20px; }
+    nav.primary{ display:none; }
+    .call-chip{ display:none; }
+    .cat-grid, .prod-grid{ grid-template-columns:1fr; }
+    .trust-grid{ grid-template-columns:1fr; }
+    .trust-item{ border-right:none; border-bottom:1px solid var(--line); }
+    .foot-grid{ grid-template-columns:1fr; }
+    .promo{ padding:38px 26px; }
+    section{ padding:60px 0; }
+    .hero{ padding:56px 0 64px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="power-veil" aria-hidden="true"></div>
+
+<header>
+  <div class="wrap nav-row">
+    <a href="#" class="logo"><span class="led"></span>Texno<b>Fazo</b></a>
+    <nav class="primary" aria-label="Asosiy navigatsiya">
+      <a href="#categories">Kategoriyalar</a>
+      <a href="#products">TV va Audio</a>
+      <a href="#products">Maishiy texnika</a>
+      <a href="#deals">Chegirmalar</a>
+      <a href="#contact">Aloqa</a>
+    </nav>
+    <div class="nav-actions">
+      <span class="call-chip">☎ <span class="num">+998 94 765 22 02</span></span>
+      <button class="icon-btn" aria-label="Qidiruv">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Savat">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="led"></span>Toshkentning uy elektronikasi do'koni</span>
+      <h1>Har bir xonani<br><em>quvvatlang</em>.</h1>
+      <p class="lede">TexnoFazo'ga xush kelibsiz — ishonchli va yuqori sifatli elektronika do'koningiz. Eng so'nggi televizorlardan tortib kundalik maishiy texnikagacha, uyingizni aqlli tarzda ishlab turishini ta'minlaymiz.</p>
+      <div class="hero-ctas">
+        <a href="#products" class="btn btn-primary">
+          Katalogni ko'rish
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#deals" class="btn btn-ghost">Shu haftalik chegirmalar</a>
+      </div>
+      <div class="hero-stats">
+        <div><span class="num">12,000+</span><span class="lbl">Mahsulot mavjud</span></div>
+        <div><span class="num">0%</span><span class="lbl">Bo'lib to'lash, 12 oy</span></div>
+        <div><span class="num">24 soat</span><span class="lbl">Toshkent bo'ylab yetkazib berish</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="title">Bo'limlar bo'yicha xarid</span>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="panel-grid">
+        <div class="panel-tile">
+          <div class="top-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span class="led"></span>
+          </div>
+          <span class="name">Televizorlar</span>
+          <span class="stat">1,240 model</span>
+        </div>
+        <div class="panel-tile">
+          <div class="top-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="16" r="3"/><circle cx="18" cy="16" r="3"/><path d="M6 16V8a6 6 0 0 1 12 0v8"/></svg>
+            <span class="led"></span>
+          </div>
+          <span class="name">Audio</span>
+          <span class="stat">860 model</span>
+        </div>
+        <div class="panel-tile">
+          <div class="top-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 6h4"/></svg>
+            <span class="led"></span>
+          </div>
+          <span class="name">Telefon aksessuarlari</span>
+          <span class="stat">2,300 model</span>
+        </div>
+        <div class="panel-tile">
+          <div class="top-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 6h.01M11 6h5"/></svg>
+            <span class="led"></span>
+          </div>
+          <span class="name">Kir yuvish mashinalari</span>
+          <span class="stat">410 model</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="categories">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="tag">// Bo'limlar</span>
+        <h2>Uyingiz uchun barcha narsa</h2>
+      </div>
+      <a href="#products" class="see-all">To'liq katalogni ko'rish →</a>
+    </div>
+
+    <div class="cat-grid">
+      <div class="cat-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <h3>Televizorlar</h3>
+        <p>Devoringizga mos har qanday o'lchamdagi 4K, QLED va smart televizorlar.</p>
+        <span class="cat-count"><span class="led"></span>1,240 mahsulot</span>
+      </div>
+      <div class="cat-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="16" r="3"/><circle cx="18" cy="16" r="3"/><path d="M6 16V8a6 6 0 0 1 12 0v8"/></svg>
+        <h3>Audio texnikasi</h3>
+        <p>Saundbarlar, karnaylar, quloqchinlar va uy kinoteatri tizimlari.</p>
+        <span class="cat-count"><span class="led"></span>860 mahsulot</span>
+      </div>
+      <div class="cat-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 6h4"/></svg>
+        <h3>Telefon aksessuarlari</h3>
+        <p>Har qanday telefon uchun g'iloflar, quvvatlagichlar, kabellar va pauerbanklar.</p>
+        <span class="cat-count"><span class="led"></span>2,300 mahsulot</span>
+      </div>
+      <div class="cat-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 6h.01M11 6h5"/></svg>
+        <h3>Kir yuvish mashinalari</h3>
+        <p>Har qanday xonadon uchun old va yuqori yuklamali hamda kompakt mashinalar.</p>
+        <span class="cat-count"><span class="led"></span>410 mahsulot</span>
+      </div>
+      <div class="cat-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 10V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-4"/><path d="M5 10h14M9 3v7M9 17v.01"/></svg>
+        <h3>Muzlatgichlar</h3>
+        <p>Bir eshikdan ikki eshikkacha, muzlamaydigan va aqlli sovutish tizimi bilan.</p>
+        <span class="cat-count"><span class="led"></span>380 mahsulot</span>
+      </div>
+      <div class="cat-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+        <h3>Maishiy texnika</h3>
+        <p>Mikroto'lqinli pechlar, choynaklar, chang yutgichlar va boshqa ko'plab narsalar.</p>
+        <span class="cat-count"><span class="led"></span>1,050 mahsulot</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="products" class="products-section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="tag">// Shu haftaning tanlovlari</span>
+        <h2>Hozirda ommabop</h2>
+        <p>Bo'limlarimizda eng tez sotilayotgan mahsulotlarga qisqacha nazar.</p>
+      </div>
+      <a href="#" class="see-all" style="color:var(--accent-orange-dim);">Barcha mahsulotlarni ko'rish →</a>
+    </div>
+
+    <div class="prod-grid">
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <span class="prod-badge">−15%</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <div class="prod-body">
+          <span class="prod-cat">Televizorlar</span>
+          <h3 class="prod-name">55" 4K Smart TV, HDR10</h3>
+          <div class="prod-foot">
+            <div class="prod-price">6,490,000 <span>UZS · oyiga 540,800 dan</span></div>
+            <button class="add-btn" aria-label="Savatga qo'shish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="prod-stock" style="margin-top:12px;"><span class="led"></span>Mavjud — Toshkent ombori</div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="8" cy="17" r="1"/><circle cx="12" cy="17" r="1"/><path d="M6 14V9a6 6 0 0 1 12 0v5"/></svg>
+        </div>
+        <div class="prod-body">
+          <span class="prod-cat">Audio texnikasi</span>
+          <h3 class="prod-name">Simsiz saundbar, 2.1ch</h3>
+          <div class="prod-foot">
+            <div class="prod-price">1,290,000 <span>UZS · oyiga 107,500 dan</span></div>
+            <button class="add-btn" aria-label="Savatga qo'shish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="prod-stock" style="margin-top:12px;"><span class="led"></span>Mavjud — Toshkent ombori</div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 6h.01M11 6h5"/></svg>
+        </div>
+        <div class="prod-body">
+          <span class="prod-cat">Kir yuvish mashinalari</span>
+          <h3 class="prod-name">Old yuklamali 7kg, 1200 RPM</h3>
+          <div class="prod-foot">
+            <div class="prod-price">4,150,000 <span>UZS · oyiga 345,800 dan</span></div>
+            <button class="add-btn" aria-label="Savatga qo'shish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="prod-stock" style="margin-top:12px;"><span class="led"></span>Mavjud — Toshkent ombori</div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 10V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-4"/><path d="M5 10h14M9 3v7M9 17v.01"/></svg>
+        </div>
+        <div class="prod-body">
+          <span class="prod-cat">Muzlatgichlar</span>
+          <h3 class="prod-name">No-Frost 300L, Invertor</h3>
+          <div class="prod-foot">
+            <div class="prod-price">5,980,000 <span>UZS · oyiga 498,300 dan</span></div>
+            <button class="add-btn" aria-label="Savatga qo'shish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="prod-stock" style="margin-top:12px;"><span class="led"></span>Mavjud — Toshkent ombori</div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <span class="prod-badge">Yangi</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M11 18h2"/></svg>
+        </div>
+        <div class="prod-body">
+          <span class="prod-cat">Telefon aksessuarlari</span>
+          <h3 class="prod-name">Tezkor quvvatlagich pauerbank 20,000mAh</h3>
+          <div class="prod-foot">
+            <div class="prod-price">320,000 <span>UZS</span></div>
+            <button class="add-btn" aria-label="Savatga qo'shish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="prod-stock" style="margin-top:12px;"><span class="led"></span>Mavjud — Toshkent ombori</div>
+        </div>
+      </div>
+
+      <div class="prod-card">
+        <div class="prod-media">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 18V6l8 6-8 6z"/><rect x="2" y="3" width="20" height="18" rx="3"/></svg>
+        </div>
+        <div class="prod-body">
+          <span class="prod-cat">Audio texnikasi</span>
+          <h3 class="prod-name">Simsiz quloqchinlar, ANC</h3>
+          <div class="prod-foot">
+            <div class="prod-price">450,000 <span>UZS</span></div>
+            <button class="add-btn" aria-label="Savatga qo'shish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="prod-stock" style="margin-top:12px;"><span class="led"></span>Mavjud — Toshkent ombori</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="trust">
+  <div class="wrap trust-grid">
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+      <div><h4>0% bo'lib to'lash</h4><p>Har qanday xaridni 12 oygacha bo'lib to'lang, yashirin to'lovlarsiz.</p></div>
+    </div>
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4z"/></svg>
+      <div><h4>2 yillik kafolat</h4><p>Sotadigan har bir mahsulotimiz yetib kelgan kunidan boshlab kafolatlanadi.</p></div>
+    </div>
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="18.5" r="1.5"/></svg>
+      <div><h4>Toshkent bo'ylab bepul yetkazib berish</h4><p>Buyurtmalar 24 soat ichida yetkaziladi, o'rnatish xizmati mavjud.</p></div>
+    </div>
+    <div class="trust-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+      <div><h4>100% original</h4><p>Faqat rasmiy import, ishlab chiqaruvchi hujjatlari bilan.</p></div>
+    </div>
+  </div>
+</div>
+
+<section id="deals">
+  <div class="wrap">
+    <div class="promo">
+      <div class="promo-text">
+        <span class="tag">Cheklangan muddat</span>
+        <h2>Yozgi Quvvat Chegirmasi — TV va Audio texnikaga 30% gacha chegirma</h2>
+        <p>Oy oxirigacha amal qiladi. Har bir chegirmali buyurtmaga bepul yetkazib berish kiritilgan.</p>
+      </div>
+      <div class="promo-cta">
+        <a href="#products" class="btn btn-primary">Chegirmalarni ko'rish</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#" class="logo"><span class="led"></span>Texno<b>Fazo</b></a>
+        <p>Ishonchli va yuqori sifatli elektronika do'koningiz — televizorlar, audio, maishiy texnika va telefon aksessuarlari bir joyda.</p>
+        <div class="foot-socials">
+          <a href="https://t.me/Texnofazo_urgut" class="icon-btn" aria-label="Telegram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/texno.fazo/" class="icon-btn" aria-label="Instagram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h5>Xarid</h5>
+        <a href="#categories">Televizorlar</a>
+        <a href="#categories">Audio texnikasi</a>
+        <a href="#categories">Telefon aksessuarlari</a>
+        <a href="#categories">Kir yuvish mashinalari</a>
+        <a href="#categories">Muzlatgichlar</a>
+      </div>
+      <div class="foot-col">
+        <h5>Yordam</h5>
+        <a href="#">Kafolat</a>
+        <a href="#">Yetkazib berish haqida</a>
+        <a href="#">Bo'lib to'lash rejalari</a>
+        <a href="#">Qaytarish</a>
+      </div>
+      <div class="foot-col">
+        <h5>Yangiliklar va chegirmalardan xabardor bo'ling</h5>
+        <p style="margin-bottom:14px;">Haftasiga bitta email, faqat yangi mahsulotlar va chegirmalar.</p>
+        <div class="newsletter">
+          <input type="email" placeholder="sizning@email.com" aria-label="Elektron pochta manzili">
+          <button>Obuna bo'lish</button>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© 2026 TexnoFazo. Samarkand, O'zbekiston.</p>
+      <div class="legal">
+        <a href="#">Maxfiylik</a>
+        <a href="#">Foydalanish shartlari</a>
+        <a href="#">+998 94 765 22 02</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  window.addEventListener('load', () => {
+    const veil = document.querySelector('.power-veil');
+    if(veil){ setTimeout(() => veil.remove(), 1600); }
+  });
+</script>
+
+</body>
+</html>
